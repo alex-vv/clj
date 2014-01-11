@@ -1,6 +1,14 @@
 (ns clj.core)
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(require '[necessary-evil.core :as xml-rpc])
+
+(defn xmlrpc [method-name args]
+  (xml-rpc/call* "http://www.livejournal.com/interface/xmlrpc" method-name args 
+                  :request { :headers { "User-Agent" "CLJ v0.0.1 <avflance@gmail.com>" }}))
+  
+(defn auth []
+  (xmlrpc :LJ.XMLRPC.getchallenge []))
+
+(defn -main
+  []
+  (println (auth)))
