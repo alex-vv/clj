@@ -75,7 +75,7 @@
   (reduce #(update-if-contains %1 %2 f) map vals))
 
 (defn get-posts []
-  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 16))
+  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 20))
         events (:events (get-events {:selecttype "syncitems"
                             :lastsync (from-date date)}))]
     (map #(update-vals %1 [:event :subject] decode-str) events)))
@@ -95,7 +95,6 @@
   (.mkdir (java.io.File. dir)))
 
 (defn save-post [post]
-  (println (str "Saving post" post))
   (let [dir (str username "/" (post-dir post))]
     (mkdir username)
     (mkdir dir)
@@ -103,8 +102,8 @@
       (indent-str (post-as-xml post)))))
 
 (defn save-posts [posts]
-  (println "Saving posts")
-  (map #(save-post %1) posts))
+  (println (str "Saving posts: " (count posts)))
+  (doall (map #(save-post %1) posts)))
 
 (defn run []
   (save-posts (get-posts)))
