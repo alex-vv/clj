@@ -1,6 +1,7 @@
 (ns clj.core
   (:use [clj-time.format :only [formatter, parse, unparse]]
-        [digest :only [md5]])
+        [digest :only [md5]]
+        [clojure.data.xml :only [sexp-as-element, indent-str]])
   (:require [clj-time.core :as joda]
             [necessary-evil.core :as xml-rpc]
             [necessary-evil.fault :as xml-rpc-fault]))
@@ -12,7 +13,7 @@
   (let [res (xml-rpc/call* "http://www.livejournal.com/interface/xmlrpc" method-name [args]
                   :request { :headers { "User-Agent" "CLJ v0.0.1 <avflance@gmail.com>" }})]
     (if (xml-rpc-fault/fault? res)
-      (println (:fault-string res))
+      (throw (Exception. (:fault-string res)))
       res)))
 
 
@@ -66,24 +67,34 @@
     s
     (String. s "UTF-8")))
 
-(defn map-keys [f coll key]
-  #(assoc %1 key (f (key %1))) coll)
+(defn update-if-contains [map key f] 
+  (println (str "update-if-contains" map key))
+  (if (contains? map key)
+    (update-in map [key] f)
+    map))
+
+(defn update-vals [map vals f]
+  (reduce #(update-if-contains %1 %2 f) map vals))
 
 (defn get-posts []
-  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 4))
-        events (get-events {:selecttype "syncitems"
-                 :lastsync (from-date date)})]
-    (map-keys decode-str (:events events) :event)))
+  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 11))
+        events (:events (get-events {:selecttype "syncitems"
+                            :lastsync (from-date date)}))]
+    (map #(update-vals %1 [:event :subject] decode-str) events)))
+
+(defn post-as-xml [post]
+  (sexp-as-element
+    [:post (dissoc post :event)
+      [:text [:-cdata (:event post)]]]))
 
 (defn run []
-  (get-posts))
+  (map indent-str (map post-as-xml (get-posts))))
 
 (defn -main
   [username password]
   (def username username)
   (def password password)
-  (println (run)))
-
-;(run)
-;(map-keys decode-str {:a "123" :b "234"} :a)
-
+  (try
+    (println (run))
+    (catch Exception e
+      (println (.getMessage e)))))

@@ -6,5 +6,6 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [necessary-evil "2.0.0"]
                  [digest "1.4.3"]
-                 [clj-time "0.6.0"]]
+                 [clj-time "0.6.0"],
+                 [org.clojure/data.xml "0.0.7"]]
   :main clj.core/-main)
