@@ -16,7 +16,6 @@
       (throw (Exception. (:fault-string res)))
       res)))
 
-
 (defn get-challenge []
   (:challenge (xmlrpc :LJ.XMLRPC.getchallenge [])))
 
@@ -68,7 +67,6 @@
     (String. s "UTF-8")))
 
 (defn update-if-contains [map key f] 
-  (println (str "update-if-contains" map key))
   (if (contains? map key)
     (update-in map [key] f)
     map))
@@ -77,7 +75,7 @@
   (reduce #(update-if-contains %1 %2 f) map vals))
 
 (defn get-posts []
-  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 11))
+  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 16))
         events (:events (get-events {:selecttype "syncitems"
                             :lastsync (from-date date)}))]
     (map #(update-vals %1 [:event :subject] decode-str) events)))
@@ -87,14 +85,35 @@
     [:post (dissoc post :event)
       [:text [:-cdata (:event post)]]]))
 
+(defn post-filename [post]
+  (str (subs (:logtime post) 0 10) ".xml"))
+
+(defn post-dir [post]
+  (str (subs (:logtime post) 0 4)))
+
+(defn mkdir [dir]
+  (.mkdir (java.io.File. dir)))
+
+(defn save-post [post]
+  (println (str "Saving post" post))
+  (let [dir (str username "/" (post-dir post))]
+    (mkdir username)
+    (mkdir dir)
+    (spit (str dir "/" (post-filename post)) 
+      (indent-str (post-as-xml post)))))
+
+(defn save-posts [posts]
+  (println "Saving posts")
+  (map #(save-post %1) posts))
+
 (defn run []
-  (map indent-str (map post-as-xml (get-posts))))
+  (save-posts (get-posts)))
 
 (defn -main
   [username password]
   (def username username)
   (def password password)
   (try
-    (println (run))
+    (run)
     (catch Exception e
       (println (.getMessage e)))))
