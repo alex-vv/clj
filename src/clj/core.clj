@@ -4,7 +4,8 @@
         [clojure.data.xml :only [sexp-as-element, indent-str]])
   (:require [clj-time.core :as joda]
             [necessary-evil.core :as xml-rpc]
-            [necessary-evil.fault :as xml-rpc-fault]))
+            [necessary-evil.fault :as xml-rpc-fault]
+            [clojure.edn]))
 
 (def password)
 (def username)
@@ -30,9 +31,13 @@
    :ver 1})
 
 (defn exec [method args]
+  (println (str "exec" method args))
   (let [challenge (get-challenge)]
     (xmlrpc method
       (merge args (auth-params challenge (digest challenge))))))
+
+(defn sync-items-mock []
+  (clojure.edn/read-string (slurp "sync-items.edn")))
 
 (defn sync-items [last-sync]
   (println "sync-items" last-sync)
@@ -48,6 +53,7 @@
 (defn all-sync-items []
   (let [items (sync-items nil)
         total (:total items)]
+    (println (str "all-sync-items items " items))
     (loop [acc (:syncitems items)]
       (if-not (< (count acc) total)
         (filter #(.startsWith (:item %1) "L-") acc)
@@ -56,6 +62,7 @@
 (def custom-formatter (formatter "yyyy-MM-dd HH:mm:ss"))
 
 (defn to-date [date-str]
+  (println (str "to-date " date-str ";"))
   (parse custom-formatter date-str))
 
 (defn from-date [date-str]
@@ -74,15 +81,41 @@
 (defn update-vals [map vals f]
   (reduce #(update-if-contains %1 %2 f) map vals))
 
-(defn get-posts []
-  (let [date (joda/minus (to-date (:time (first (all-sync-items)))) (joda/secs 20))
-        events (:events (get-events {:selecttype "syncitems"
-                            :lastsync (from-date date)}))]
+; TODO get all posts not the first 100
+(defn get-posts [date]
+  (let [events (:events (get-events {:selecttype "syncitems"
+                                     :lastsync (from-date date)}))]
     (map #(update-vals %1 [:event :subject] decode-str) events)))
+
+(defn get-posts-mock [date]
+  (if (and date (= 2008 (joda/year date)))
+    (clojure.edn/read-string (slurp "get-posts.edn"))
+    (get-posts date)))
+
+(defn get-posts-for-syncitems [syncitems]
+  (println "get-posts-for-syncitems" syncitems)
+  (let [date (joda/minus (to-date (:time (first syncitems))) (joda/secs 16))]
+    (vec (get-posts date))))
+
+(defn get-all-posts []
+  ; change to all-sync-items
+  (loop [syncitems (all-sync-items)
+         acc (get-posts-for-syncitems syncitems)]
+    (println (str "get-all-posts syncitems " syncitems))
+    (if-not (< (count acc) (count syncitems))
+      acc
+      ; else we need to exclude downloaded posts from syncitems
+      ; and run recursively for the sincitems left
+      ; to filter, take max date from acc
+      ; filter out all syncitems <= this date
+      (let [maxdate (:eventtime (peek acc))
+            filtered-syncitems (filter #(= 1 (compare (:time %1) maxdate)) syncitems)]
+        (recur filtered-syncitems
+               (conj acc (get-posts-for-syncitems filtered-syncitems)))))))
 
 (defn post-as-xml [post]
   (sexp-as-element
-    [:post (dissoc post :event)
+    [:post (dissoc post :event :props)
       [:text [:-cdata (:event post)]]]))
 
 (defn post-filename [post]
@@ -113,6 +146,6 @@
   (def username username)
   (def password password)
   (try
-    (run)
+    (println "test")
     (catch Exception e
       (println (.getMessage e)))))

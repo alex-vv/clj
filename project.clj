@@ -8,4 +8,4 @@
                  [digest "1.4.3"]
                  [clj-time "0.6.0"],
                  [org.clojure/data.xml "0.0.7"]]
-  :main clj.core/-main)
+  :main clj.core)
