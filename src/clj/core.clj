@@ -94,7 +94,7 @@
 
 (defn get-posts-for-syncitems [syncitems]
   (println "get-posts-for-syncitems" syncitems)
-  (let [date (joda/minus (to-date (:time (first syncitems))) (joda/secs 16))]
+  (let [date (joda/minus (to-date (:time (first syncitems))) (joda/secs 14))]
     (vec (get-posts date))))
 
 (defn get-all-posts []
@@ -111,7 +111,7 @@
       (let [maxdate (:eventtime (peek acc))
             filtered-syncitems (filter #(= 1 (compare (:time %1) maxdate)) syncitems)]
         (recur filtered-syncitems
-               (conj acc (get-posts-for-syncitems filtered-syncitems)))))))
+               (concat acc (get-posts-for-syncitems filtered-syncitems)))))))
 
 (defn post-as-xml [post]
   (sexp-as-element
@@ -128,6 +128,7 @@
   (.mkdir (java.io.File. dir)))
 
 (defn save-post [post]
+  (println (str "Saving post: " post))
   (let [dir (str username "/" (post-dir post))]
     (mkdir username)
     (mkdir dir)
@@ -139,13 +140,13 @@
   (doall (map #(save-post %1) posts)))
 
 (defn run []
-  (save-posts (get-posts)))
+  (save-posts (get-all-posts)))
 
 (defn -main
   [username password]
   (def username username)
   (def password password)
   (try
-    (println "test")
+    (run)
     (catch Exception e
       (println (.getMessage e)))))
