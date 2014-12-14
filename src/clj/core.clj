@@ -10,6 +10,7 @@
 (def password)
 (def username)
 
+; Run XML-RPC method for LJ API, returns response as a map
 (defn xmlrpc [method-name args]
   (let [res (xml-rpc/call* "http://www.livejournal.com/interface/xmlrpc" method-name [args]
                   :request { :headers { "User-Agent" "CLJ v0.0.1 <avflance@gmail.com>" }})]
@@ -30,12 +31,14 @@
    :auth_response digest
    :ver 1})
 
+; Run XML-RPC API with authentication challenge
 (defn exec [method args]
   (println (str "exec" method args))
   (let [challenge (get-challenge)]
     (xmlrpc method
       (merge args (auth-params challenge (digest challenge))))))
 
+; Mock data
 (defn sync-items-mock []
   (clojure.edn/read-string (slurp "sync-items.edn")))
 
@@ -53,7 +56,6 @@
 (defn all-sync-items []
   (let [items (sync-items nil)
         total (:total items)]
-    (println (str "all-sync-items items " items))
     (loop [acc (:syncitems items)]
       (if-not (< (count acc) total)
         (filter #(.startsWith (:item %1) "L-") acc)
@@ -62,7 +64,6 @@
 (def custom-formatter (formatter "yyyy-MM-dd HH:mm:ss"))
 
 (defn to-date [date-str]
-  (println (str "to-date " date-str ";"))
   (parse custom-formatter date-str))
 
 (defn from-date [date-str]
@@ -81,7 +82,6 @@
 (defn update-vals [map vals f]
   (reduce #(update-if-contains %1 %2 f) map vals))
 
-; TODO get all posts not the first 100
 (defn get-posts [date]
   (let [events (:events (get-events {:selecttype "syncitems"
                                      :lastsync (from-date date)}))]
@@ -93,25 +93,24 @@
     (get-posts date)))
 
 (defn get-posts-for-syncitems [syncitems]
-  (println "get-posts-for-syncitems" syncitems)
-  (let [date (joda/minus (to-date (:time (first syncitems))) (joda/secs 14))]
+  (let [date (joda/minus (to-date (:time (first syncitems))) (joda/seconds 1))]
     (vec (get-posts date))))
 
-(defn get-all-posts []
-  ; change to all-sync-items
+(defn fetch-all-posts [callback]
   (loop [syncitems (all-sync-items)
-         acc (get-posts-for-syncitems syncitems)]
-    (println (str "get-all-posts syncitems " syncitems))
-    (if-not (< (count acc) (count syncitems))
-      acc
-      ; else we need to exclude downloaded posts from syncitems
+         posts (get-posts-for-syncitems syncitems)
+         fetched 0]
+    (doall (map #(callback %1) posts))
+    (if (< (+ fetched (count posts)) (count syncitems))
+      ; we need to exclude downloaded posts from syncitems
       ; and run recursively for the sincitems left
       ; to filter, take max date from acc
       ; filter out all syncitems <= this date
-      (let [maxdate (:eventtime (peek acc))
+      (let [maxdate (:eventtime (peek posts))
             filtered-syncitems (filter #(= 1 (compare (:time %1) maxdate)) syncitems)]
         (recur filtered-syncitems
-               (concat acc (get-posts-for-syncitems filtered-syncitems)))))))
+               (get-posts-for-syncitems filtered-syncitems)
+               (count posts))))))
 
 (defn post-as-xml [post]
   (sexp-as-element
@@ -128,19 +127,14 @@
   (.mkdir (java.io.File. dir)))
 
 (defn save-post [post]
-  (println (str "Saving post: " post))
   (let [dir (str username "/" (post-dir post))]
     (mkdir username)
     (mkdir dir)
     (spit (str dir "/" (post-filename post)) 
       (indent-str (post-as-xml post)))))
 
-(defn save-posts [posts]
-  (println (str "Saving posts: " (count posts)))
-  (doall (map #(save-post %1) posts)))
-
 (defn run []
-  (save-posts (get-all-posts)))
+  (fetch-all-posts save-post))
 
 (defn -main
   [username password]
