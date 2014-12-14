@@ -74,7 +74,7 @@
     s
     (String. s "UTF-8")))
 
-(defn update-if-contains [map key f] 
+(defn update-if-contains [map key f]
   (if (contains? map key)
     (update-in map [key] f)
     map))
@@ -130,7 +130,7 @@
   (let [dir (str username "/" (post-dir post))]
     (mkdir username)
     (mkdir dir)
-    (spit (str dir "/" (post-filename post)) 
+    (spit (str dir "/" (post-filename post))
       (indent-str (post-as-xml post)))))
 
 (defn run []
