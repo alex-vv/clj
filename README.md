@@ -5,7 +5,16 @@ LiveJournal archive tool in Clojure
 
 ## Usage
 
-TBD
+
+ * Install Leiningen, for example with Homebrew on mac OS
+ ```
+ $ brew install leiningen
+ ```
+ * Run with lein 
+ ```
+ $ lein run username password
+ ```
+
 
 ## License
 
