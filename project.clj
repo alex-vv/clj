@@ -3,9 +3,9 @@
   :url "https://github.com/alex-vv/clj"
   :license {:name "MIT License"
             :url "https://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [necessary-evil "2.0.2"]
-                 [digest "1.4.4"]
-                 [clj-time "0.8.0"],
+                 [digest "1.4.6"]
+                 [clj-time "0.14.0"],
                  [org.clojure/data.xml "0.0.8"]]
   :main clj.core)
