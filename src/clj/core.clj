@@ -1,58 +1,27 @@
 (ns clj.core
-  (:use [clj-time.format :only [formatter, parse, unparse]]
-        [digest :only [md5]]
+  (:use [clj.utils]
+        [clj.xmlrpc]
         [clojure.data.xml :only [sexp-as-element, indent-str]])
-  (:require [clj-time.core :as joda]
-            [necessary-evil.core :as xml-rpc]
-            [necessary-evil.fault :as xml-rpc-fault]
-            [clojure.edn]))
+  (:require [clj-time.core :as joda]))
 
 (def password)
 (def username)
 
-; Run XML-RPC method for LJ API, returns response as a map
-(defn xmlrpc [method-name args]
-  (let [res (xml-rpc/call* "http://www.livejournal.com/interface/xmlrpc" method-name [args]
-                  :request { :headers { "User-Agent" "CLJ v0.0.1 <avflance@gmail.com>"} :decompress-body false})]
-    (if (xml-rpc-fault/fault? res)
-      (throw (Exception. (:fault-string res)))
-      res)))
-
-(defn get-challenge []
-  (:challenge (xmlrpc :LJ.XMLRPC.getchallenge [])))
-
-(defn digest [challenge]
-  (md5 (str challenge (md5 password))))
-
-(defn auth-params [challenge digest]
-  {:username username
-   :auth_method "challenge"
-   :auth_challenge challenge
-   :auth_response digest
-   :ver 1})
-
-; Run XML-RPC API with authentication challenge
+; wrapper to run xmlrpc with challenge using global username / password
 (defn exec [method args]
-  (println (str "exec" method args))
-  (let [challenge (get-challenge)]
-    (xmlrpc method
-      (merge args (auth-params challenge (digest challenge))))))
-
-; Mock data
-(defn sync-items-mock []
-  (clojure.edn/read-string (slurp "sync-items.edn")))
+  (println (str "exec " method args))
+  (xmlrpc-challenge username password method args))
 
 (defn sync-items [last-sync]
-  (println "sync-items" last-sync)
   (exec "LJ.XMLRPC.syncitems"
     (if last-sync
         {:lastsync last-sync}
         nil)))
 
 (defn get-events [args]
-  (println "get-events" args)
   (exec "LJ.XMLRPC.getevents" args))
 
+; fetch all syncitems of 'L' type (journal entries), possibly recursively in several steps
 (defn all-sync-items []
   (let [items (sync-items nil)
         total (:total items)]
@@ -61,41 +30,18 @@
         (filter #(.startsWith (:item %1) "L-") acc)
         (recur (conj acc (sync-items (:time (peek acc)))))))))
 
-(def custom-formatter (formatter "yyyy-MM-dd HH:mm:ss"))
-
-(defn to-date [date-str]
-  (parse custom-formatter date-str))
-
-(defn from-date [date-str]
-  (unparse custom-formatter date-str))
-
-(defn decode-str [s]
-  (if (string? s)
-    s
-    (String. s "UTF-8")))
-
-(defn update-if-contains [map key f]
-  (if (contains? map key)
-    (update-in map [key] f)
-    map))
-
-(defn update-vals [map vals f]
-  (reduce #(update-if-contains %1 %2 f) map vals))
-
+; fetch posts starting from a date (lastsync)
 (defn get-posts [date]
   (let [events (:events (get-events {:selecttype "syncitems"
                                      :lastsync (from-date date)}))]
     (map #(update-vals %1 [:event :subject] decode-str) events)))
 
-(defn get-posts-mock [date]
-  (if (and date (= 2008 (joda/year date)))
-    (clojure.edn/read-string (slurp "get-posts.edn"))
-    (get-posts date)))
-
+; fetch posts from the date of the first element in syncitems
 (defn get-posts-for-syncitems [syncitems]
   (let [date (joda/minus (to-date (:time (first syncitems))) (joda/seconds 1))]
     (vec (get-posts date))))
 
+; fetch all posts, applying a callback function (with a side effect) to each of them
 (defn fetch-all-posts [callback]
   (loop [syncitems (all-sync-items)
          posts (get-posts-for-syncitems syncitems)
@@ -103,8 +49,8 @@
     (doall (map #(callback %1) posts))
     (if (< (+ fetched (count posts)) (count syncitems))
       ; we need to exclude downloaded posts from syncitems
-      ; and run recursively for the sincitems left
-      ; to filter, take max date from acc
+      ; and run recursively for the syncitems left
+      ; to filter, take max date from posts
       ; filter out all syncitems <= this date
       (let [maxdate (:eventtime (peek posts))
             filtered-syncitems (filter #(= 1 (compare (:time %1) maxdate)) syncitems)]
@@ -112,20 +58,21 @@
                (get-posts-for-syncitems filtered-syncitems)
                (count posts))))))
 
+; convert post to xml
 (defn post-as-xml [post]
   (sexp-as-element
     [:post (dissoc post :event :props)
       [:text [:-cdata (:event post)]]]))
 
+; generate a file name to save a post
 (defn post-filename [post]
   (str (subs (:logtime post) 0 10) ".xml"))
 
+; generate a dir name to save a post
 (defn post-dir [post]
   (str (subs (:logtime post) 0 4)))
 
-(defn mkdir [dir]
-  (.mkdir (java.io.File. dir)))
-
+; saves a post
 (defn save-post [post]
   (let [dir (str username "/" (post-dir post))]
     (mkdir username)
@@ -133,6 +80,7 @@
     (spit (str dir "/" (post-filename post))
       (indent-str (post-as-xml post)))))
 
+; fetch and save all posts
 (defn run []
   (fetch-all-posts save-post))
 
