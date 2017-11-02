@@ -1,0 +1,18 @@
+{
+ :security "private"
+ :logtime "2008-01-19 10:26:46"
+ :reply_count 4
+ :event_timestamp 1200878760
+ :eventtime "2008-01-21 01:26:00"
+ :itemid 1
+ :url "http://user.livejournal.com/1.html"
+ :ditemid 1
+ :anum 2
+ :props {
+         :commentalter 1
+         :revnum 1
+         :opt_preformatted 1
+         :revtime 1242730966}
+ :can_comment 1
+ :event "Test post2"
+ }

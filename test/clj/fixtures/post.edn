@@ -1,18 +1,25 @@
 {
- :security "private",
- :logtime "2008-01-19 10:26:46",
- :reply_count 4,
- :event_timestamp 1200878760,
- :eventtime "2008-01-21 01:26:00",
- :itemid 1,
- :url "http://user.livejournal.com/1.html",
- :ditemid 1,
- :anum 2,
+ :security "private"
+ :logtime "2008-01-19 10:26:46"
+ :reply_count 4
+ :event_timestamp 1200878760
+ :eventtime "2008-01-21 01:26:00"
+ :itemid 1
+ :url "http://user.livejournal.com/1.html"
+ :ditemid 1
+ :anum 2
  :props {
-   :commentalter 1,
-   :revnum 1,
-   :opt_preformatted 1,
-   :revtime 1242730966},
- :can_comment 1,
+   :commentalter 1
+   :revnum 1
+   :opt_preformatted 1
+   :revtime 1242730966}
+ :can_comment 1
  :event "Test post<br>\r\nSecond line, lj link <lj user=\"user\">"
+ :comments [
+    {:postername "user1", :dtalkid 1, :posterid 1, :is_show 1, :state "A", :level 0, :datepostunix 1200867794, :is_loaded 1, :thread_count 0, :datepost "2008-01-20 22:23:14 UTC", :body "comment 1", :parentdtalkid 0}
+    {:postername "user2", :dtalkid 2, :posterid 2, :is_show 1, :state "A", :level 0, :datepostunix 1200875697, :is_loaded 1, :thread_count 0, :datepost "2008-01-21 00:34:57 UTC", :body "comment 2", :parentdtalkid 0}
+    {:postername "user3", :children [
+      {:postername "user4", :dtalkid 4, :posterid 3, :is_show 1, :state "A", :level 1, :datepostunix 1201004361, :is_loaded 1, :thread_count 0, :datepost "2008-01-22 12:19:21 UTC", :body "comment 3", :parentdtalkid 3}],
+     :dtalkid 3, :posterid 4, :is_show 1, :state "A", :level 0, :datepostunix 1200986374, :is_loaded 1, :thread_count 1, :datepost "2008-01-22 07:19:34 UTC", :body "comment 4", :parentdtalkid 0}
+  ]
 }

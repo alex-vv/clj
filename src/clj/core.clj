@@ -12,6 +12,7 @@
   (println (str "exec " method args))
   (xmlrpc-challenge username password method args))
 
+; LIVEJOURNAL API
 (defn sync-items [last-sync]
   (exec "LJ.XMLRPC.syncitems"
     (if last-sync
@@ -20,6 +21,10 @@
 
 (defn get-events [args]
   (exec "LJ.XMLRPC.getevents" args))
+
+(defn get-comments [ditemid itemid]
+  (exec "LJ.XMLRPC.getcomments" {:journal username :ditemid ditemid :itemid itemid}))
+
 
 ; fetch all syncitems of 'L' type (journal entries), possibly recursively in several steps
 (defn all-sync-items []
@@ -58,11 +63,26 @@
                (get-posts-for-syncitems filtered-syncitems)
                (count posts))))))
 
+; convert comments to xml fragment (recursively for threaded comments)
+(defn comments-as-xml [comments]
+  (->> comments
+       (map (fn [comment]
+        [:comment (dissoc comment :body :children)
+          [:text
+            [:-cdata (decode-str (:body comment))]]
+        (if (:children comment)
+          [:comments (comments-as-xml (:children comment))]
+          nil)]))))
+
 ; convert post to xml
 (defn post-as-xml [post]
   (sexp-as-element
-    [:post (dissoc post :event :props)
-      [:text [:-cdata (:event post)]]]))
+    [:post (dissoc post :event :props :comments)
+      [:text
+        [:-cdata (:event post)]]
+     (if (:comments post)
+        [:comments (comments-as-xml (:comments post))]
+        nil)]))
 
 ; generate a file name to save a post
 (defn post-filename [post]
@@ -71,6 +91,12 @@
 ; generate a dir name to save a post
 (defn post-dir [post]
   (str (subs (:logtime post) 0 4)))
+
+; fetch comments for a post if they are available
+(defn fetch-post-comments [post]
+  (if (= 0 (:reply_count post))
+    post
+    (assoc post :comments (:comments (get-comments (:ditemid post) (:itemid post))))))
 
 ; saves a post
 (defn save-post [post]
@@ -82,7 +108,9 @@
 
 ; fetch and save all posts
 (defn run []
-  (fetch-all-posts save-post))
+  (fetch-all-posts #(-> %1
+                        fetch-post-comments
+                        save-post)))
 
 (defn -main
   [username password]
