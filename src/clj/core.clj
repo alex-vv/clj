@@ -38,7 +38,8 @@
 ; fetch posts starting from a date (lastsync)
 (defn get-posts [date]
   (let [events (:events (get-events {:selecttype "syncitems"
-                                     :lastsync (from-date date)}))]
+                                     :lastsync (from-date date)
+                                     :get_video_ids true}))]
     (map #(update-vals %1 [:event :subject] decode-str) events)))
 
 ; fetch posts from the date of the first element in syncitems
