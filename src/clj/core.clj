@@ -23,7 +23,7 @@
   (exec "LJ.XMLRPC.getevents" args))
 
 (defn get-comments [ditemid itemid]
-  (exec "LJ.XMLRPC.getcomments" {:journal username :ditemid ditemid :itemid itemid}))
+  (exec "LJ.XMLRPC.getcomments" {:journal username :ditemid ditemid :itemid itemid :extra true}))
 
 
 ; fetch all syncitems of 'L' type (journal entries), possibly recursively in several steps
@@ -67,7 +67,8 @@
 (defn comments-as-xml [comments]
   (->> comments
        (map (fn [comment]
-        [:comment (dissoc comment :body :children)
+        [:comment (-> (dissoc comment :body :children :poster_userpic_url :privileges :props)
+                      (assoc :poster_ip (-> comment :props :poster_ip)))
           [:text
             [:-cdata (decode-str (:body comment))]]
         (if (:children comment)
