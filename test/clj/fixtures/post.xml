@@ -4,22 +4,22 @@
 Second line, lj link <lj user="user">]]>
   </text>
   <comments>
-    <comment postername="user1" dtalkid="1" posterid="1" is_show="1" state="A" level="0" datepostunix="1200867794" is_loaded="1" thread_count="0" datepost="2008-01-20 22:23:14 UTC" parentdtalkid="0">
+    <comment postername="user1" dtalkid="1" poster_ip="" posterid="1" is_show="1" state="A" level="0" datepostunix="1200867794" is_loaded="1" thread_count="0" datepost="2008-01-20 22:23:14 UTC" parentdtalkid="0">
       <text>
         <![CDATA[comment 1]]>
       </text>
     </comment>
-    <comment postername="user2" dtalkid="2" posterid="2" is_show="1" state="A" level="0" datepostunix="1200875697" is_loaded="1" thread_count="0" datepost="2008-01-21 00:34:57 UTC" parentdtalkid="0">
+    <comment postername="user2" dtalkid="2" poster_ip="" posterid="2" is_show="1" state="A" level="0" datepostunix="1200875697" is_loaded="1" thread_count="0" datepost="2008-01-21 00:34:57 UTC" parentdtalkid="0">
       <text>
         <![CDATA[comment 2]]>
       </text>
     </comment>
-    <comment postername="user3" dtalkid="3" posterid="4" is_show="1" state="A" level="0" datepostunix="1200986374" is_loaded="1" thread_count="1" datepost="2008-01-22 07:19:34 UTC" parentdtalkid="0">
+    <comment postername="user3" dtalkid="3" poster_ip="" posterid="4" is_show="1" state="A" level="0" datepostunix="1200986374" is_loaded="1" thread_count="1" datepost="2008-01-22 07:19:34 UTC" parentdtalkid="0">
       <text>
         <![CDATA[comment 4]]>
       </text>
       <comments>
-        <comment postername="user4" dtalkid="4" posterid="3" is_show="1" state="A" level="1" datepostunix="1201004361" is_loaded="1" thread_count="0" datepost="2008-01-22 12:19:21 UTC" parentdtalkid="3">
+        <comment postername="user4" dtalkid="4" poster_ip="" posterid="3" is_show="1" state="A" level="1" datepostunix="1201004361" is_loaded="1" thread_count="0" datepost="2008-01-22 12:19:21 UTC" parentdtalkid="3">
           <text>
             <![CDATA[comment 3]]>
           </text>

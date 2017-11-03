@@ -2,7 +2,8 @@
   (:use [clj.utils]
         [clj.xmlrpc]
         [clojure.data.xml :only [sexp-as-element, indent-str]])
-  (:require [clj-time.core :as joda]))
+  (:require [clj-time.core :as joda]
+            [clj-time.coerce :as joda-coerce]))
 
 (def password)
 (def username)
@@ -13,12 +14,6 @@
   (xmlrpc-challenge username password method args))
 
 ; LIVEJOURNAL API
-(defn sync-items [last-sync]
-  (exec "LJ.XMLRPC.syncitems"
-    (if last-sync
-        {:lastsync last-sync}
-        nil)))
-
 (defn get-events [args]
   (exec "LJ.XMLRPC.getevents" args))
 
@@ -26,43 +21,37 @@
   (exec "LJ.XMLRPC.getcomments" {:journal username :ditemid ditemid :itemid itemid :extra true}))
 
 
-; fetch all syncitems of 'L' type (journal entries), possibly recursively in several steps
-(defn all-sync-items []
-  (let [items (sync-items nil)
-        total (:total items)]
-    (loop [acc (:syncitems items)]
-      (if-not (< (count acc) total)
-        (filter #(.startsWith (:item %1) "L-") acc)
-        (recur (conj acc (sync-items (:time (peek acc)))))))))
+; get revtime (modification time) from a post if available
+(defn get-revtime [post]
+  (let [revtime (-> post :props :revtime)]
+    (if (nil? revtime)
+      nil
+      ; revtime is in seconds from epoch
+      (joda-coerce/from-epoch revtime))))
+
+; get last sync date from a collection of posts, that is a maximum date from a list of latest from logtime and revtime
+(defn last-sync-date [posts]
+  (if (empty? posts)
+    nil
+    (from-date
+      (->> posts
+         (map #(joda/latest (to-date(:logtime %1)) (get-revtime %1)))
+         (reduce #(joda/latest %1 %2))))))
 
 ; fetch posts starting from a date (lastsync)
-(defn get-posts [date]
-  (let [events (:events (get-events {:selecttype "syncitems"
-                                     :lastsync (from-date date)
+(defn get-posts [journal date]
+  (let [events (:events (get-events {:journal journal
+                                     :selecttype "syncitems"
+                                     :lastsync (if (nil? date) (from-date (joda/epoch)) date)
                                      :get_video_ids true}))]
     (map #(update-vals %1 [:event :subject] decode-str) events)))
 
-; fetch posts from the date of the first element in syncitems
-(defn get-posts-for-syncitems [syncitems]
-  (let [date (joda/minus (to-date (:time (first syncitems))) (joda/seconds 1))]
-    (vec (get-posts date))))
-
 ; fetch all posts, applying a callback function (with a side effect) to each of them
 (defn fetch-all-posts [callback]
-  (loop [syncitems (all-sync-items)
-         posts (get-posts-for-syncitems syncitems)
-         fetched 0]
+  (loop [posts (get-posts username nil)]
     (doall (map #(callback %1) posts))
-    (if (< (+ fetched (count posts)) (count syncitems))
-      ; we need to exclude downloaded posts from syncitems
-      ; and run recursively for the syncitems left
-      ; to filter, take max date from posts
-      ; filter out all syncitems <= this date
-      (let [maxdate (:eventtime (peek posts))
-            filtered-syncitems (filter #(= 1 (compare (:time %1) maxdate)) syncitems)]
-        (recur filtered-syncitems
-               (get-posts-for-syncitems filtered-syncitems)
-               (count posts))))))
+    (if-not (empty? posts)
+      (recur (get-posts username (last-sync-date posts))))))
 
 ; convert comments to xml fragment (recursively for threaded comments)
 (defn comments-as-xml [comments]
