@@ -2,6 +2,14 @@
 (ns clj.utils
   (:use [clj-time.format :only [formatter, parse, unparse]]))
 
+(defn test-array
+  [t]
+  (let [check (type (t []))]
+    (fn [arg] (instance? check arg))))
+
+(def byte-array?
+  (test-array byte-array))
+
 (def custom-formatter (formatter "yyyy-MM-dd HH:mm:ss"))
 
 (defn to-date [date-str]
@@ -11,9 +19,11 @@
   (unparse custom-formatter date))
 
 (defn decode-str [s]
-  (if (string? s)
-    s
-    (String. s "UTF-8")))
+  (cond
+    (nil? s) ""
+    (string? s) s
+    (byte-array? s) (String. s "UTF-8")
+    :else (.toString s)))
 
 (defn update-if-contains [map key f]
   (if (contains? map key)
