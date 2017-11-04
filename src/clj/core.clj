@@ -114,4 +114,5 @@
     (try
       (run)
       (catch Exception e
-        (println (.getMessage e))))))
+        (println (.getMessage e))
+        (.printStackTrace e)))))
