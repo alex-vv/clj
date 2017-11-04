@@ -71,6 +71,7 @@
 (defn post-as-xml [post]
   (sexp-as-element
     [:post (dissoc post :event :props :comments)
+      [:props (update-if-contains (:props post) :taglist decode-str)]
       [:text
         [:-cdata (:event post)]]
      (if (:comments post)
