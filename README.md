@@ -12,8 +12,9 @@ LiveJournal archive tool in Clojure
  ```
  * Run with lein 
  ```
- $ lein run username password
+ $ lein run username password [journal]
  ```
+ `journal` parameter is optional, if not set will fetch user's own journal
 
 
 ## License
