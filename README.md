@@ -1,7 +1,7 @@
 # clj
 
-LiveJournal archive tool in Clojure 
-(Currently in development mode)
+LiveJournal archive tool written in Clojure. 
+Saves all journal entries and comments in XML format.
 
 ## Usage
 
