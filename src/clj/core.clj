@@ -59,6 +59,7 @@
   (->> comments
        (map (fn [comment]
         [:comment (-> (dissoc comment :body :children :poster_userpic_url :privileges :props)
+                      (update-if-contains :subject decode-str)
                       (assoc :poster_ip (-> comment :props :poster_ip)))
           [:text
             [:-cdata (decode-str (:body comment))]]
