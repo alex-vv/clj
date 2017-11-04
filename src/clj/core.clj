@@ -80,11 +80,11 @@
 
 ; generate a file name to save a post
 (defn post-filename [post]
-  (str (subs (:logtime post) 0 10) ".xml"))
+  (str (subs (:eventtime post) 0 10) "_" (:itemid post) ".xml"))
 
 ; generate a dir name to save a post
 (defn post-dir [post]
-  (str (subs (:logtime post) 0 4)))
+  (str (subs (:eventtime post) 0 4)))
 
 ; fetch comments for a post if they are available
 (defn fetch-post-comments [post]
