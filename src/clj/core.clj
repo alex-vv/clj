@@ -7,6 +7,7 @@
 
 (def password)
 (def username)
+(def journal nil)
 
 ; wrapper to run xmlrpc with challenge using global username / password
 (defn exec [method args]
@@ -18,7 +19,7 @@
   (exec "LJ.XMLRPC.getevents" args))
 
 (defn get-comments [ditemid itemid]
-  (exec "LJ.XMLRPC.getcomments" {:journal username :ditemid ditemid :itemid itemid :extra true}))
+  (exec "LJ.XMLRPC.getcomments" {:journal journal :ditemid ditemid :itemid itemid :extra true}))
 
 
 ; get revtime (modification time) from a post if available
@@ -39,7 +40,7 @@
          (reduce #(joda/latest %1 %2))))))
 
 ; fetch posts starting from a date (lastsync)
-(defn get-posts [journal date]
+(defn get-posts [date]
   (let [events (:events (get-events {:journal journal
                                      :selecttype "syncitems"
                                      :lastsync (if (nil? date) (from-date (joda/epoch)) date)
@@ -48,10 +49,10 @@
 
 ; fetch all posts, applying a callback function (with a side effect) to each of them
 (defn fetch-all-posts [callback]
-  (loop [posts (get-posts username nil)]
+  (loop [posts (get-posts nil)]
     (doall (map #(callback %1) posts))
     (if-not (empty? posts)
-      (recur (get-posts username (last-sync-date posts))))))
+      (recur (get-posts (last-sync-date posts))))))
 
 ; convert comments to xml fragment (recursively for threaded comments)
 (defn comments-as-xml [comments]
@@ -91,8 +92,8 @@
 
 ; saves a post
 (defn save-post [post]
-  (let [dir (str username "/" (post-dir post))]
-    (mkdir username)
+  (let [dir (str journal "/" (post-dir post))]
+    (mkdir journal)
     (mkdir dir)
     (spit (str dir "/" (post-filename post))
       (indent-str (post-as-xml post)))))
@@ -104,10 +105,13 @@
                         save-post)))
 
 (defn -main
-  [username password]
-  (def username username)
-  (def password password)
-  (try
-    (run)
-    (catch Exception e
-      (println (.getMessage e)))))
+  ([username password]
+   (-main username password username))
+  ([username password journal]
+    (def username username)
+    (def password password)
+    (def journal journal)
+    (try
+      (run)
+      (catch Exception e
+        (println (.getMessage e))))))
