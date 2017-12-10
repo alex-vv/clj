@@ -3,7 +3,8 @@
         [clj.xmlrpc]
         [clojure.data.xml :only [sexp-as-element, indent-str]])
   (:require [clj-time.core :as joda]
-            [clj-time.coerce :as joda-coerce]))
+            [clj-time.coerce :as joda-coerce]
+            [clojure.java.io :as io]))
 
 (def password)
 (def username)
@@ -21,38 +22,37 @@
 (defn get-comments [ditemid itemid]
   (exec "LJ.XMLRPC.getcomments" {:journal journal :ditemid ditemid :itemid itemid :extra true}))
 
-
-; get revtime (modification time) from a post if available
+; get revtime (modification time) from a post if available, else logtime
 (defn get-revtime [post]
   (let [revtime (-> post :props :revtime)]
     (if (nil? revtime)
-      nil
+      (to-date(:logtime post))
       ; revtime is in seconds from epoch
       (joda-coerce/from-epoch revtime))))
 
-; get last sync date from a collection of posts, that is a maximum date from a list of latest from logtime and revtime
-(defn last-sync-date [posts]
-  (if (empty? posts)
-    nil
-    (from-date
-      (->> posts
-         (map #(joda/latest (to-date(:logtime %1)) (get-revtime %1)))
-         (reduce #(joda/latest %1 %2))))))
+; cache file name
+(defn cache-filename [] (str journal "/.lastsync"))
+
+; get initial date, either from cache or start of epoch
+(defn initial-date []
+  (if (.exists (io/file (cache-filename)))
+    (slurp (cache-filename))
+    (from-date (joda/epoch))))
 
 ; fetch posts starting from a date (lastsync)
 (defn get-posts [date]
   (let [events (:events (get-events {:journal journal
                                      :selecttype "syncitems"
-                                     :lastsync (if (nil? date) (from-date (joda/epoch)) date)
+                                     :lastsync (if (nil? date) (initial-date) date)
                                      :get_video_ids true}))]
-    (map #(update-vals %1 [:event :subject] decode-str) events)))
+    (sort-by get-revtime (map #(update-vals %1 [:event :subject] decode-str) events))))
 
 ; fetch all posts, applying a callback function (with a side effect) to each of them
 (defn fetch-all-posts [callback]
   (loop [posts (get-posts nil)]
     (doall (map #(callback %1) posts))
     (if-not (empty? posts)
-      (recur (get-posts (last-sync-date posts))))))
+      (recur (get-posts (-> posts last get-revtime from-date))))))
 
 ; convert comments to xml fragment (recursively for threaded comments)
 (defn comments-as-xml [comments]
@@ -92,13 +92,18 @@
     post
     (assoc post :comments (:comments (get-comments (:ditemid post) (:itemid post))))))
 
+; updates lastsync date cache
+(defn update-cache [post]
+  (spit (cache-filename) (from-date (get-revtime post))))
+
 ; saves a post
 (defn save-post [post]
   (let [dir (str journal "/" (post-dir post))]
     (mkdir journal)
     (mkdir dir)
     (spit (str dir "/" (post-filename post))
-      (indent-str (post-as-xml post)))))
+      (indent-str (post-as-xml post)))
+    (update-cache post)))
 
 ; fetch and save all posts
 (defn run []
