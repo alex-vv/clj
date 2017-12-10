@@ -18,12 +18,16 @@
 (defn from-date [date]
   (unparse custom-formatter date))
 
+(defn safe-xml [s]
+  (clojure.string/replace s #"[^\u0009\r\n\u0020-\uD7FF\uE000-\uFFFD\ud800\udc00-\udbff\udfff]" ""))
+
 (defn decode-str [s]
-  (cond
-    (nil? s) ""
-    (string? s) s
-    (byte-array? s) (String. s "UTF-8")
-    :else (.toString s)))
+  (safe-xml
+    (cond
+      (nil? s) ""
+      (string? s) s
+      (byte-array? s) (String. s "UTF-8")
+      :else (.toString s))))
 
 (defn update-if-contains [map key f]
   (if (contains? map key)
