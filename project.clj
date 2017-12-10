@@ -7,5 +7,5 @@
                  [necessary-evil "2.0.2"]
                  [digest "1.4.6"]
                  [clj-time "0.14.0"],
-                 [org.clojure/data.xml "0.0.8"]]
+                 [org.clojure/data.xml "0.2.0-alpha5"]]
   :main clj.core)
