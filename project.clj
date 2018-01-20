@@ -1,4 +1,4 @@
-(defproject clj "1.0.0"
+(defproject clj "2.0.0-SNAPSHOT"
   :description "LiveJournal archive tool"
   :url "https://github.com/alex-vv/clj"
   :license {:name "MIT License"
