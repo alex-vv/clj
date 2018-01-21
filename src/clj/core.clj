@@ -45,7 +45,7 @@
                                      :selecttype "syncitems"
                                      :lastsync (if (nil? date) (initial-date) date)
                                      :get_video_ids true}))]
-    (sort-by get-revtime (map #(update-vals %1 [:event :subject] decode-str) events))))
+    (sort-by get-revtime events)))
 
 ; fetch all posts, applying a callback function (with a side effect) to each of them
 (defn fetch-all-posts [callback]
@@ -59,10 +59,9 @@
   (->> comments
        (map (fn [comment]
         [:comment (-> (dissoc comment :body :children :poster_userpic_url :privileges :props)
-                      (update-if-contains :subject decode-str)
                       (assoc :poster_ip (-> comment :props :poster_ip)))
           [:text
-            [:-cdata (decode-str (:body comment))]]
+            [:-cdata (str (:body comment))]]
         (if (:children comment)
           [:comments (comments-as-xml (:children comment))]
           nil)]))))
@@ -71,9 +70,9 @@
 (defn post-as-xml [post]
   (sexp-as-element
     [:post (dissoc post :event :props :comments)
-      [:props (update-if-contains (:props post) :taglist decode-str)]
+      [:props (:props post)]
       [:text
-        [:-cdata (:event post)]]
+        [:-cdata (str (:event post))]]
      (if (:comments post)
         [:comments (comments-as-xml (:comments post))]
         nil)]))

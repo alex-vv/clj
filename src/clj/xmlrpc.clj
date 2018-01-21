@@ -1,8 +1,17 @@
 ; XMLRPC utils
 (ns clj.xmlrpc
-  (:use [digest :only [md5]])
+  (:use [digest :only [md5]]
+        [clojure.data.zip.xml :only [text]])
   (:require [necessary-evil.core :as xml-rpc]
-            [necessary-evil.fault :as xml-rpc-fault]))
+            [necessary-evil.value :as xml-rpc-value]
+            [necessary-evil.fault :as xml-rpc-fault])
+  (:import org.apache.commons.codec.binary.Base64))
+
+(defn safe-xml [s]
+  (clojure.string/replace s #"[^\u0009\r\n\u0020-\uD7FF\uE000-\uFFFD\ud800\udc00-\udbff\udfff]" ""))
+
+(defmethod xml-rpc-value/parse-value :base64 [v]
+  (safe-xml (String. (Base64/decodeBase64 ^String (text v)) "UTF-8")))
 
 ; Run XML-RPC method for LJ API, returns response as a map
 (defn xmlrpc [method-name args]
