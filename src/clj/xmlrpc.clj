@@ -13,8 +13,9 @@
 (defmethod xml-rpc-value/parse-value :base64 [v]
   (safe-xml (String. (Base64/decodeBase64 ^String (text v)) "UTF-8")))
 
-; Run XML-RPC method for LJ API, returns response as a map
-(defn xmlrpc [method-name args]
+(defn xmlrpc
+  "Run XML-RPC method for LJ API, returns response as a map"
+  [method-name args]
   (let [res (xml-rpc/call* "http://www.livejournal.com/interface/xmlrpc" method-name [args]
                            :request { :headers { "User-Agent" "CLJ v2.0.0-SNAPSHOT <avflance@gmail.com>"} :decompress-body false})]
     (if (xml-rpc-fault/fault? res)
@@ -34,8 +35,9 @@
    :auth_response digest
    :ver 1})
 
-; Run XML-RPC API with authentication challenge
-(defn xmlrpc-challenge [username password method args]
+(defn xmlrpc-challenge
+  "Run XML-RPC API with authentication challenge"
+  [username password method args]
   (let [challenge (get-challenge)]
     (xmlrpc method
       (merge args

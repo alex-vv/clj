@@ -10,8 +10,9 @@
 (def username)
 (def journal nil)
 
-; wrapper to run xmlrpc with challenge using global username / password
-(defn exec [method args]
+(defn exec
+  "Wrapper to run xmlrpc with challenge using global username / password"
+  [method args]
   (println (str "exec " method args))
   (xmlrpc-challenge username password method args))
 
@@ -22,40 +23,47 @@
 (defn get-comments [ditemid itemid]
   (exec "LJ.XMLRPC.getcomments" {:journal journal :ditemid ditemid :itemid itemid :extra true}))
 
-; get revtime (modification time) from a post if available, else logtime
-(defn get-revtime [post]
+(defn get-revtime
+  "Get revtime (modification time) from a post if available, else logtime"
+  [post]
   (let [revtime (-> post :props :revtime)]
     (if (nil? revtime)
       (to-date(:logtime post))
       ; revtime is in seconds from epoch
       (joda-coerce/from-epoch revtime))))
 
-; cache file name
-(defn cache-filename [] (str journal "/.lastsync"))
+(defn cache-filename
+  "Cache file name"
+  []
+  (str journal "/.lastsync"))
 
-; get initial date, either from cache or start of epoch
-(defn initial-date []
+(defn initial-date
+  "Get initial date, either from cache or start of epoch"
+  []
   (if (.exists (io/file (cache-filename)))
     (slurp (cache-filename))
     (from-date (joda/epoch))))
 
-; fetch posts starting from a date (lastsync)
-(defn get-posts [date]
+(defn get-posts
+  "Fetch posts starting from a date (lastsync)"
+  [date]
   (let [events (:events (get-events {:journal journal
                                      :selecttype "syncitems"
                                      :lastsync (if (nil? date) (initial-date) date)
                                      :get_video_ids true}))]
     (sort-by get-revtime events)))
 
-; fetch all posts, applying a callback function (with a side effect) to each of them
-(defn fetch-all-posts [callback]
+(defn fetch-all-posts
+  "Fetch all posts, applying a callback function (with a side effect) to each of them"
+  [callback]
   (loop [posts (get-posts nil)]
     (doall (map #(callback %1) posts))
     (if-not (empty? posts)
       (recur (get-posts (-> posts last get-revtime from-date))))))
 
-; convert comments to xml fragment (recursively for threaded comments)
-(defn comments-as-xml [comments]
+(defn comments-as-xml
+  "Convert comments to xml fragment (recursively for threaded comments)"
+  [comments]
   (->> comments
        (map (fn [comment]
         [:comment (-> (dissoc comment :body :children :poster_userpic_url :privileges :props)
@@ -66,8 +74,9 @@
           [:comments (comments-as-xml (:children comment))]
           nil)]))))
 
-; convert post to xml
-(defn post-as-xml [post]
+(defn post-as-xml
+  "Convert post to xml"
+  [post]
   (sexp-as-element
     [:post (dissoc post :event :props :comments)
       [:props (:props post)]
@@ -77,26 +86,31 @@
         [:comments (comments-as-xml (:comments post))]
         nil)]))
 
-; generate a file name to save a post
-(defn post-filename [post]
+(defn post-filename
+  "Generate a file name to save a post"
+  [post]
   (str (subs (:eventtime post) 0 10) "_" (:itemid post) ".xml"))
 
-; generate a dir name to save a post
-(defn post-dir [post]
+(defn post-dir
+  "Generate a dir name to save a post"
+  [post]
   (str (subs (:eventtime post) 0 4)))
 
-; fetch comments for a post if they are available
-(defn fetch-post-comments [post]
+(defn fetch-post-comments
+  "Fetch comments for a post if they are available"
+  [post]
   (if (= 0 (:reply_count post))
     post
     (assoc post :comments (:comments (get-comments (:ditemid post) (:itemid post))))))
 
-; updates lastsync date cache
-(defn update-cache [post]
+(defn update-cache
+  "Updates lastsync date cache"
+  [post]
   (spit (cache-filename) (from-date (get-revtime post))))
 
-; saves a post
-(defn save-post [post]
+(defn save-post
+  "Saves a post"
+  [post]
   (let [dir (str journal "/" (post-dir post))]
     (mkdir journal)
     (mkdir dir)
@@ -104,8 +118,9 @@
       (indent-str (post-as-xml post)))
     (update-cache post)))
 
-; fetch and save all posts
-(defn run []
+(defn run
+  "Fetch and save all posts"
+  []
   (fetch-all-posts #(-> %1
                         fetch-post-comments
                         save-post)))
