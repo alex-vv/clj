@@ -21,7 +21,14 @@
   (exec "LJ.XMLRPC.getevents" args))
 
 (defn get-comments [ditemid itemid]
-  (exec "LJ.XMLRPC.getcomments" {:journal journal :ditemid ditemid :itemid itemid :extra true}))
+  (try 
+    (exec "LJ.XMLRPC.getcomments" {:journal journal :ditemid ditemid :itemid itemid :extra true})
+    (catch Exception e 
+      (if (.contains (.getMessage e) "Don't have access to requested journal")
+        (do 
+          (println "ERROR: No access to comments, skipping")
+          {})
+        (throw e)))))
 
 (defn get-revtime
   "Get revtime (modification time) from a post if available, else logtime"
