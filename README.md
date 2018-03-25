@@ -3,6 +3,8 @@
 LiveJournal archive tool written in Clojure. 
 Saves all journal entries and comments in XML format.
 
+[![Build Status](https://travis-ci.org/alex-vv/clj.svg?branch=master)](https://travis-ci.org/alex-vv/clj)
+
 ## Usage
 
 
