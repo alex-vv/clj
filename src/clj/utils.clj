@@ -10,5 +10,19 @@
 (defn from-date [date]
   (unparse custom-formatter date))
 
+(defn latest [date-str1 date-str2]
+  (cond
+    (nil? date-str1) date-str2
+    (nil? date-str2) date-str1
+    (= 1 (compare (to-date date-str1) (to-date date-str2))) date-str1
+    :else date-str2))
+
+(defn earliest [date-str1 date-str2]
+  (cond
+    (nil? date-str1) date-str2
+    (nil? date-str2) date-str1
+    (= 1 (compare (to-date date-str1) (to-date date-str2))) date-str2
+    :else date-str1))
+
 (defn mkdir [dir]
   (.mkdir (java.io.File. dir)))

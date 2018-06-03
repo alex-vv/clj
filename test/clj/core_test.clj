@@ -3,6 +3,7 @@
         [clj.utils])
   (:require [clojure.test :refer :all]
             [clj.core :refer :all]
+            [clj.metadata :refer :all]
             [clojure.edn]
             [clojure.java.io :as io]
             [clj-time.core :as joda]))
@@ -56,6 +57,26 @@
           post-xml (fixture-string "post2.xml")]
       (is (= post-xml (indent-str (post-as-xml post)))))))
 
+(deftest metadata
+  (testing "flatten comments"
+    (let [comments (:comments (fixture-edn "post.edn"))]
+      (is (= 4 (count (flatten-comments comments))))))
+  (testing "calculate metadata from a single post"
+    (let [post (fixture-edn "post.edn")
+          metadata (fixture-edn "metadata.edn")]
+      (is (= metadata (post-metadata "test-journal" post)))))
+  (testing "merge metadata"
+    (let [metadata1 (fixture-edn "metadata.edn")
+          metadata2 (fixture-edn "metadata2.edn")
+          metadata3 (fixture-edn "metadata3.edn")]
+      (is (= metadata3 (merge-metadata metadata1 metadata2)))))
+  (testing "metadata as xml"
+    (let [metadata (fixture-edn "metadata.edn")
+          metadata-xml (fixture-string "metadata.xml")]
+      (is (= metadata-xml
+        (indent-str
+          (update-in (metadata-as-xml metadata) [:attrs] dissoc :last-updated)))))))
+
 (deftest file
   (testing "save-post"
     (let [post (fixture-edn "post2.edn")
@@ -67,4 +88,3 @@
       (io/delete-file "test-journal/2008/2008-01-21_1.xml")
       (io/delete-file "test-journal/2008")
       (io/delete-file "test-journal"))))
-

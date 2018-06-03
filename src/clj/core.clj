@@ -1,5 +1,6 @@
 (ns clj.core
   (:use [clj.utils]
+        [clj.metadata]
         [clj.xmlrpc]
         [clojure.data.xml :only [sexp-as-element, indent-str]])
   (:require [clj-time.core :as joda]
@@ -20,11 +21,11 @@
   (exec "LJ.XMLRPC.getevents" args))
 
 (defn get-comments [journal ditemid itemid]
-  (try 
+  (try
     (exec "LJ.XMLRPC.getcomments" {:journal journal :ditemid ditemid :itemid itemid :extra true})
-    (catch Exception e 
+    (catch Exception e
       (if (.contains (.getMessage e) "Don't have access to requested journal")
-        (do 
+        (do
           (println "ERROR: No access to comments, skipping")
           {})
         (throw e)))))
@@ -62,10 +63,12 @@
 (defn fetch-all-posts
   "Fetch all posts, applying a callback function (with a side effect) to each of them"
   [journal callback]
-  (loop [posts (get-posts journal nil)]
-    (doall (map #(callback %1) posts))
-    (if-not (empty? posts)
-      (recur (get-posts journal (-> posts last get-revtime from-date))))))
+  (loop [posts (get-posts journal nil)
+         metadata (initial-metadata journal)]
+    (let [reduced-meta (reduce callback metadata posts)]
+      (if-not (empty? posts)
+        (recur (get-posts journal (-> posts last get-revtime from-date))
+               reduced-meta)))))
 
 (defn comments-as-xml
   "Convert comments to xml fragment (recursively for threaded comments)"
@@ -128,9 +131,12 @@
   "Fetch and save all posts"
   [journal]
   (fetch-all-posts journal
-                  #(->> %1
-                     (fetch-post-comments journal)
-                     (save-post journal))))
+    (fn [metadata post]
+      (let [post (fetch-post-comments journal post)
+            meta (merge-metadata metadata (post-metadata journal post))]
+        (save-post journal post)
+        (save-metadata journal (metadata-as-xml meta))
+        meta))))
 
 (defn -main
   ([username password]

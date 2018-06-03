@@ -21,7 +21,7 @@ Second line, lj link <lj user="user">]]>
         <![CDATA[comment 4]]>
       </text>
       <comments>
-        <comment postername="user4" dtalkid="4" poster_ip="" posterid="3" is_show="1" state="A" level="1" datepostunix="1201004361" is_loaded="1" thread_count="0" datepost="2008-01-22 12:19:21 UTC" parentdtalkid="3">
+        <comment postername="user1" dtalkid="4" poster_ip="" posterid="3" is_show="1" state="A" level="1" datepostunix="1201004361" is_loaded="1" thread_count="0" datepost="2008-01-22 12:19:21 UTC" parentdtalkid="3">
           <text>
             <![CDATA[comment 3]]>
           </text>

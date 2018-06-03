@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata journal="test-journal">
+  <entries first="2008-01-21 01:26:00" last="2008-01-21 01:26:00" total="1"/>
+  <comments total="4">
+    <user name="user1" comments="2"/>
+    <user name="user2" comments="1"/>
+    <user name="user3" comments="1"/>
+  </comments>
+</metadata>

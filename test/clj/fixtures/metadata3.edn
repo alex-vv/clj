@@ -1,0 +1,15 @@
+{
+ :journal "test-journal"
+ :entries  {
+            :first "2008-01-21 01:26:00"
+            :last  "2009-01-21 01:26:00"
+            :total 2
+            }
+ :comments {
+            :total 10
+            :users [{:name "user1" :comments 5}
+                    {:name "user3" :comments 2}
+                    {:name "user5" :comments 2}
+                    {:name "user2" :comments 1}]
+            }
+ }
