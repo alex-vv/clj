@@ -36,7 +36,7 @@ $ java -jar clj-2.0.0-M1-standalone.jar username [password] [journal]
  ```
  * Run with lein
  ```
- $ lein run username password [journal]
+ $ lein run username [password] [journal]
  ```
 
 ## License
