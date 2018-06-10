@@ -16,13 +16,19 @@ https://github.com/alex-vv/clj/releases/download/2.0.0-M1/clj-2.0.0-M1-standalon
 * Run with Java
 
 ```
-$ java -jar clj-2.0.0-M1-standalone.jar username password [journal]
+$ java -jar clj-2.0.0-M1-standalone.jar username [password] [journal]
 ```
 
-`journal` parameter is optional, if not set will fetch user's own journal
+**Parameters:**
+
+`username` - LiveJournal user name which is also a journal name which will be downloaded unless a separate journal is specified in `journal` parameter.
+
+`password` - LiveJournal user password. Optional, if not set then only the public entries will be downloaded.
+
+`journal` - Allows to specify a separate journal to download. Optional, if not set will fetch user's own journal.
 
 
-### Alternative way
+## Alternative way
 
  * Install Leiningen, for example with Homebrew on mac OS
  ```

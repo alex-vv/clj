@@ -12,10 +12,13 @@
 (def username)
 
 (defn exec
-  "Wrapper to run xmlrpc with challenge using global username / password"
+  "Wrapper to run xmlrpc with challenge using global username / password.
+  In case password is nil method is called directly without a challenge"
   [method args]
   (println (str "exec " method args))
-  (xmlrpc-challenge username password method args))
+  (if (nil? password)
+    (xmlrpc method (merge {:ver 1} args))
+    (xmlrpc-challenge username password method args)))
 
 ; LIVEJOURNAL API
 (defn get-events [args]
@@ -141,8 +144,10 @@
 
 (defn -main
   "Application entry point"
+  ([username]
+    (-main username nil username))
   ([username password]
-   (-main username password username))
+    (-main username password username))
   ([username password journal]
     (def username username)
     (def password password)
