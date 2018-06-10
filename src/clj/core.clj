@@ -1,4 +1,5 @@
 (ns clj.core
+  (:gen-class)
   (:use [clj.utils]
         [clj.metadata]
         [clj.xmlrpc]
@@ -138,9 +139,9 @@
         (save-metadata journal (metadata-as-xml meta))
         meta))))
 
-(defn -main
+(defn mmm
   ([username password]
-   (-main username password username))
+   (mmm username password username))
   ([username password journal]
     (def username username)
     (def password password)
@@ -149,3 +150,8 @@
       (catch Exception e
         (println (.getMessage e))
         (.printStackTrace e)))))
+
+(defn -main
+  "Application entry point"
+  [& args]
+  (apply mmm args))

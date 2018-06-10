@@ -1,4 +1,4 @@
-(defproject clj "2.0.0-SNAPSHOT"
+(defproject clj "2.0.0-M1"
   :description "LiveJournal archive tool"
   :url "https://github.com/alex-vv/clj"
   :license {:name "MIT License"
@@ -8,4 +8,5 @@
                  [digest "1.4.6"]
                  [clj-time "0.14.0"],
                  [org.clojure/data.xml "0.2.0-alpha5"]]
-  :main clj.core)
+  :main clj.core
+  :aot [clj.core])
