@@ -139,9 +139,10 @@
         (save-metadata journal (metadata-as-xml meta))
         meta))))
 
-(defn mmm
+(defn -main
+  "Application entry point"
   ([username password]
-   (mmm username password username))
+   (-main username password username))
   ([username password journal]
     (def username username)
     (def password password)
@@ -150,8 +151,3 @@
       (catch Exception e
         (println (.getMessage e))
         (.printStackTrace e)))))
-
-(defn -main
-  "Application entry point"
-  [& args]
-  (apply mmm args))
