@@ -16,7 +16,7 @@ https://github.com/alex-vv/clj/releases/download/2.0.0-M1/clj-2.0.0-M1-standalon
 * Run with Java
 
 ```
-$ java -jar clj-2.0.0-M1-standalone.jar username [journal] [-p]
+$ java -jar clj-2.0.0-SNAPSHOT-standalone.jar username [journal] [-p]
 ```
 
 **Parameters:**
@@ -25,7 +25,7 @@ $ java -jar clj-2.0.0-M1-standalone.jar username [journal] [-p]
 
 `journal` - Allows to specify a separate journal to download. Optional, if not set will fetch user's own journal.
 
-`-p` - Ask for LiveJournal user password. Optional, if not set then only the public entries will be downloaded.  It is also possible to provide a password with `CLJ_PASSWORD` environmental variable.
+`-p` - Ask for LiveJournal user's password. Optional, if not set then only the public entries will be downloaded.  It is also possible to provide a password with `CLJ_PASSWORD` environmental variable.
 
 
 ## Alternative way

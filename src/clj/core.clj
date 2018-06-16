@@ -7,6 +7,7 @@
   (:require [clj-time.core :as joda]
             [clj-time.coerce :as joda-coerce]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [clojure.tools.cli :refer [parse-opts]]))
 
 (def password)
@@ -143,6 +144,20 @@
         (save-metadata journal (metadata-as-xml meta))
         meta))))
 
+(def usage
+  (->> ["CLJ - LiveJournal downloader, version: 2.0.0-SNAPSHOT"
+        ""
+        "Usage: java -jar clj-2.0.0-SNAPSHOT-standalone.jar username [journal] [-p]"
+        ""
+        "  username  LiveJournal user name"
+        "  journal   Journal to download. Optional, if not set will fetch user's own journal."
+        "  -p        Ask for a password, without a password only public entries will be downloaded"]
+       (string/join \newline)))
+
+(defn exit []
+  (println usage)
+  (System/exit 1))
+
 (def cli-options
   [["-p" nil "Ask for a password"
     :id :password]])
@@ -150,16 +165,18 @@
 (defn -main [& args]
   "Application entry point"
   (let [opts (parse-opts args cli-options)
-        arguments (:arguments opts)
-        username (first arguments)
-        journal (if (= 1 (count arguments)) username (last arguments))]
-    (def username username)
-    (def password
-      (if (-> opts :options :password)
-        (read-password "LJ password")
-        (System/getenv "CLJ_PASSWORD")))
-    (try
-      (run journal)
-      (catch Exception e
-        (println (.getMessage e))
-        (.printStackTrace e)))))
+        arguments (:arguments opts)]
+    (if (empty? arguments)
+      (exit)
+      (let [username (first arguments)
+            journal (if (= 1 (count arguments)) username (last arguments))]
+        (def username username)
+        (def password
+          (if (-> opts :options :password)
+            (read-password "LJ password")
+            (System/getenv "CLJ_PASSWORD")))
+        (try
+          (run journal)
+          (catch Exception e
+            (println (.getMessage e))
+            (.printStackTrace e)))))))
