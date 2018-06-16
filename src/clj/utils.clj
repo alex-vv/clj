@@ -26,3 +26,14 @@
 
 (defn mkdir [dir]
   (.mkdir (java.io.File. dir)))
+
+; https://groups.google.com/d/msg/clojure/r77ydJ0tnLI/jG3dbzOUAwAJ
+(defn read-password [prompt]
+  (if (= "user" (str (.getName *ns*)))
+    (do
+      (print (format "%s [will be echoed to the screen]" prompt))
+      (flush)
+      (read-line))
+    (let [console (System/console)
+          chars   (.readPassword console "%s" (into-array [prompt]))]
+      (apply str chars))))

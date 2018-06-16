@@ -6,7 +6,8 @@
         [clojure.data.xml :only [sexp-as-element, indent-str]])
   (:require [clj-time.core :as joda]
             [clj-time.coerce :as joda-coerce]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.tools.cli :refer [parse-opts]]))
 
 (def password)
 (def username)
@@ -142,15 +143,21 @@
         (save-metadata journal (metadata-as-xml meta))
         meta))))
 
-(defn -main
+(def cli-options
+  [["-p" nil "Ask for a password"
+    :id :password]])
+
+(defn -main [& args]
   "Application entry point"
-  ([username]
-    (-main username nil username))
-  ([username password]
-    (-main username password username))
-  ([username password journal]
+  (let [opts (parse-opts args cli-options)
+        arguments (:arguments opts)
+        username (first arguments)
+        journal (if (= 1 (count arguments)) username (last arguments))]
     (def username username)
-    (def password password)
+    (def password
+      (if (-> opts :options :password)
+        (read-password "LJ password")
+        (System/getenv "CLJ_PASSWORD")))
     (try
       (run journal)
       (catch Exception e
