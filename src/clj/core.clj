@@ -145,9 +145,9 @@
         meta))))
 
 (def usage
-  (->> ["CLJ - LiveJournal downloader, version: 2.0.0-SNAPSHOT"
+  (->> ["CLJ - LiveJournal downloader, version: 2.0.0"
         ""
-        "Usage: java -jar clj-2.0.0-SNAPSHOT-standalone.jar username [journal] [-p]"
+        "Usage: java -jar clj-2.0.0-standalone.jar username [journal] [-p]"
         ""
         "  username  LiveJournal user name"
         "  journal   Journal to download. Optional, if not set will fetch user's own journal."
