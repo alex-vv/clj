@@ -8,7 +8,7 @@
   (:import org.apache.commons.codec.binary.Base64))
 
 (defn safe-xml [s]
-  (clojure.string/replace s #"[^\u0009\r\n\u0020-\uD7FF\uE000-\uFFFD\ud800\udc00-\udbff\udfff]" ""))
+  (clojure.string/replace s #"[^\u0009\r\n\u0020-\uFFFD\x{10000}-\x{10ffff}]" ""))
 
 (defmethod xml-rpc-value/parse-value :base64 [v]
   (safe-xml (String. (Base64/decodeBase64 ^String (text v)) "UTF-8")))
