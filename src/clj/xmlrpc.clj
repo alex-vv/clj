@@ -17,7 +17,7 @@
   "Run XML-RPC method for LJ API, returns response as a map"
   [method-name args]
   (let [res (xml-rpc/call* "http://www.livejournal.com/interface/xmlrpc" method-name [args]
-                           :request { :headers { "User-Agent" "CLJ v2.0.0 <avflance@gmail.com>"} :decompress-body false})]
+                           :request { :headers { "User-Agent" "CLJ v2.0.1 <avflance@gmail.com>"} :decompress-body false})]
     (if (xml-rpc-fault/fault? res)
       (throw (Exception. (:fault-string res)))
       res)))

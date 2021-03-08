@@ -11,12 +11,12 @@ Saves all journal entries and comments in XML format.
 
 * Download the latest CLJ jar file from Releases:
 
-https://github.com/alex-vv/clj/releases/download/2.0.0/clj-2.0.0-standalone.jar
+https://github.com/alex-vv/clj/releases/download/2.0.1/clj-2.0.1-standalone.jar
 
 * Run with Java
 
 ```
-$ java -jar clj-2.0.0-standalone.jar username [journal] [-p]
+$ java -jar clj-2.0.1-standalone.jar username [journal] [-p]
 ```
 
 **Parameters:**
